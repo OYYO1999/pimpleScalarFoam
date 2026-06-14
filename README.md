@@ -1,4 +1,4 @@
-# pimpleScalarFoam
+# pimpleScalarFoam for OpenFOAMv2206
 
 ## Solver Description
 
