@@ -1,0 +1,29 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2206                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      transportProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+//Ubar            (0.1335 0 0);
+
+transportModel  Newtonian;
+
+nu              1.5e-5;
+
+// D = nu / Pr。air (Pr = 0.7)，so D = 1.5e-5 / 0.7 ≈ 2.142857e-5
+D               [0 2 -1 0 0 0 0] 2.142857e-5;
+
+// 3. heat source gamma [K/m]
+gamma           [0 -1 0 1 0 0 0] 35.6;
+
+// ************************************************************************* //

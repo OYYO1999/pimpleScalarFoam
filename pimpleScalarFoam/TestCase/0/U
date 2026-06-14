@@ -1,0 +1,155 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2012                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volVectorField;
+    location    "1";
+    object      U;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 1 -1 0 0 0 0];
+
+internalField   #codeStream
+{
+    code
+    #{
+        const IOdictionary& d = static_cast<const IOdictionary&>(dict);
+        const objectRegistry& db = d.db();
+
+        const fvMesh& mesh = refCast<const fvMesh>(d.db());
+
+        volVectorField& fld =
+        const_cast<volVectorField&>(db.lookupObject<volVectorField>("U"));
+
+        // settings need modified start
+        // direction
+        direction streamDir = 0;
+        direction spanDir = 2;
+        direction heightDir = 1;
+        // half height
+        const scalar h = 1e-3;
+        const scalar Um = 33; //注意 这里最后是根据平均速度得出层流边界层，最后应该偏小一个为好
+        const scalar Retau = 180;
+        const scalar nu = 1.5e-5;
+        const scalar utau = Retau*nu/h;
+        // settings need modified end
+
+        // spanwise wavenumber: spacing z+ = 200
+        const scalar betaPlus = 2.0*constant::mathematical::pi*(1.0/200.0);
+        // streamwise wave number: spacing x+ = 500
+        const scalar alphaPlus = 2.0*constant::mathematical::pi*(1.0/500.0);
+        const scalar sigma = 0.00055;
+        const scalar epsilon = Um/200.0;
+        const scalar duplus = Um*0.25/utau;
+
+        const bool setBulk = true;
+        const bool perturb = true;
+
+        // Random number generator
+        Random perturbation(1234567);
+
+        const vectorField& centres = mesh.C();
+
+        forAll(centres, celli)
+        {
+            // add a small (+/-20%) random component to enhance symetry breaking
+            scalar deviation=1.0 + 0.2*perturbation.GaussNormal<scalar>();
+
+            const vector& cCentre = centres[celli];
+
+            scalar zplus = cCentre[spanDir]*Retau/h;
+            scalar y = min(cCentre[heightDir], 2*h-cCentre[heightDir]);
+            scalar yplus = y*Retau/h;
+            scalar xplus = cCentre[streamDir]*Retau/h;
+
+            if (setBulk)
+            {
+                // laminar parabolic profile
+                fld[celli] = vector::zero;
+
+                fld[celli][streamDir] =
+                    3.0*Um * (y/h - 0.5*sqr(y/h));
+                    // Blasius Um*( 5/4*(1-pow(zloc-1,4)));
+            }
+
+            if (perturb)
+            {
+                // streak streamwise velocity
+                fld[celli][streamDir] +=
+                    (utau * duplus/2.0) * (yplus/40.0)
+                    * Foam::exp(-sigma * Foam::sqr(yplus) + 0.5)
+                    * Foam::cos(betaPlus*zplus)*deviation;
+
+                // streak spanwise perturbation
+                fld[celli][spanDir] =
+                    epsilon
+                * Foam::sin(alphaPlus*xplus)
+                * yplus
+                * Foam::exp(-sigma*Foam::sqr(yplus))
+                * deviation;
+            }
+        }
+        fld.writeEntry("", os);
+        // os << fld.internalField();
+
+    #};
+
+    codeInclude
+    #{
+        #include "fvCFD.H"
+    #};
+ 
+    codeOptions
+    #{
+        -I$(LIB_SRC)/finiteVolume/lnInclude \
+        -I$(LIB_SRC)/meshTools/lnInclude
+    #};
+
+    codeLibs
+    #{
+        -lfiniteVolume \
+        -lmeshTools
+    #};
+
+};
+//    uniform (0.4 0 0);
+
+boundaryField
+{
+    INLET
+    {
+        type            cyclic;
+    }
+    OUTLET
+    {
+        type            cyclic;
+    }
+    WALL_L
+    {
+        type            cyclic;
+    }
+    WALL_R
+    {
+        type            cyclic;
+    }
+    SLIP
+    {
+        type            slip;
+    }
+    WALL_BOTTOM
+    {
+        type            fixedValue;
+        value           uniform (0 0 0);
+    }
+}
+
+
+// ************************************************************************* //

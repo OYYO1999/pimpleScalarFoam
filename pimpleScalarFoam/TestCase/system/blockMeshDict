@@ -1,0 +1,125 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2206                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      blockMeshDict;
+}
+// ************************************************************************* //
+
+// Smooth half-channel mesh.
+// Channel half-height h = 1 mm, so the computational domain is y = 0 ~ h.
+// The patch names and patch types follow the supplied boundary file.
+// Domain size assumed here: Lx = 2*pi*h, Lz = pi*h.
+
+scale 1;
+
+vertices
+(
+    (0                   0       0)                    // 0
+    (0.0062831853071796  0       0)                    // 1
+    (0.0062831853071796  0.001   0)                    // 2
+    (0                   0.001   0)                    // 3
+    (0                   0       0.0031415926535898)   // 4
+    (0.0062831853071796  0       0.0031415926535898)   // 5
+    (0.0062831853071796  0.001   0.0031415926535898)   // 6
+    (0                   0.001   0.0031415926535898)   // 7
+);
+
+blocks
+(
+    // 149 * 99 * 149 = 2,197,899 cells, close to 200w.
+    // y grading ratio = top cell height / bottom cell height = 20.
+    // This clusters cells near WALL_BOTTOM and coarsens toward SLIP.
+    hex (0 1 2 3 4 5 6 7) (149 99 149) simpleGrading (1 20 1)
+);
+
+edges
+(
+);
+
+boundary
+(
+    SLIP
+    {
+        type            slip;
+        faces
+        (
+            (3 7 6 2)
+        );
+    }
+
+    WALL_BOTTOM
+    {
+        type            wall;
+        faces
+        (
+            (0 1 5 4)
+        );
+    }
+
+    INLET
+    {
+        type            cyclic;
+        neighbourPatch  OUTLET;
+        matchTolerance  0.03;
+        transform       translational;
+        separationVector (0.0062831853071796 0 0);
+        faces
+        (
+            (0 4 7 3)
+        );
+    }
+
+    OUTLET
+    {
+        type            cyclic;
+        neighbourPatch  INLET;
+        matchTolerance  0.03;
+        transform       translational;
+        separationVector (-0.0062831853071796 0 0);
+        faces
+        (
+            (1 2 6 5)
+        );
+    }
+
+    WALL_L
+    {
+        type            cyclic;
+        neighbourPatch  WALL_R;
+        matchTolerance  0.03;
+        transform       translational;
+        separationVector (0 0 0.0031415926535898);
+        faces
+        (
+            (0 3 2 1)
+        );
+    }
+
+    WALL_R
+    {
+        type            cyclic;
+        neighbourPatch  WALL_L;
+        matchTolerance  0.03;
+        transform       translational;
+        separationVector (0 0 -0.0031415926535898);
+        faces
+        (
+            (4 5 6 7)
+        );
+    }
+);
+
+mergePatchPairs
+(
+);
+
+// ************************************************************************* //
