@@ -16,26 +16,13 @@ The flow and heat transfer are governed by the unsteady incompressible Navier-St
 
 The incompressibility constraint is given by
 
-$$
-\nabla \cdot \mathbf{U} = 0
-$$
+$$ \nabla \cdot \mathbf{U} = 0 $$
 
 ### 2. Momentum Equation
 
 The incompressible Navier-Stokes equation is written as
 
-$$
-\frac{\partial \mathbf{U}}{\partial t}
-+
-\nabla \cdot \left( \mathbf{U} \otimes \mathbf{U} \right)
-=========================================================
-
--\nabla p
-+
-\nu \nabla^2 \mathbf{U}
-+
-\mathbf{f}
-$$
+$$ \frac{\partial \mathbf{U}}{\partial t} + \nabla \cdot \left( \mathbf{U} \otimes \mathbf{U} \right) = -\nabla p + \nu \nabla^2 \mathbf{U} + \mathbf{f} $$
 
 where:
 
@@ -48,16 +35,7 @@ where:
 
 The passive scalar transport equation is written as
 
-$$
-\frac{\partial T}{\partial t}
-+
-\nabla \cdot \left( \mathbf{U} T \right)
-========================================
-
-D \nabla^2 T
-+
-S_T
-$$
+$$ \frac{\partial T}{\partial t} + \nabla \cdot \left( \mathbf{U} T \right) = D \nabla^2 T + S_T $$
 
 where:
 
@@ -67,9 +45,7 @@ where:
 
 The thermal diffusivity is defined as
 
-$$
-D = \frac{\nu}{Pr}
-$$
+$$ D = \frac{\nu}{Pr} $$
 
 where $Pr$ is the Prandtl number.
 
@@ -77,9 +53,7 @@ where $Pr$ is the Prandtl number.
 
 For a fully developed channel flow with a constant axial wall heat flux, the volumetric scalar source term is explicitly defined as
 
-$$
-S_T = \gamma U_x
-$$
+$$ S_T = \gamma U_x $$
 
 where:
 
@@ -88,15 +62,6 @@ where:
 
 Therefore, the scalar equation solved by `pimpleScalarFoam` can be expressed as
 
-$$
-\frac{\partial T}{\partial t}
-+
-\nabla \cdot \left( \mathbf{U} T \right)
-========================================
-
-D \nabla^2 T
-+
-\gamma U_x
-$$
+$$ \frac{\partial T}{\partial t} + \nabla \cdot \left( \mathbf{U} T \right) = D \nabla^2 T + \gamma U_x $$
 
 This formulation is particularly suitable for DNS and LES of thermally fully developed turbulent channel flows under constant wall heat flux conditions. By introducing the source term directly into the scalar matrix, the solver provides strict control over the scalar transport process and avoids the additional overhead associated with runtime source-term handling.
